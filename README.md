@@ -33,6 +33,12 @@ An elegant dark-themed desktop app that records your computer's audio output and
 npm start
 ```
 
+Prefer launching without a terminal? Create a desktop shortcut once (Windows):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File create-shortcut.ps1
+```
+
 1. Pick a **language** (or leave on auto-detect) and a **max duration** in seconds.
 2. Press **Record** — the app captures all system audio output.
 3. Press **Stop** (or wait for the auto-stop) — the recording is saved to `recordings/` as WebM/Opus.
