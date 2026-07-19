@@ -1,5 +1,8 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, session, desktopCapturer, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+const RECORDINGS_DIR = path.join(__dirname, 'recordings');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -20,6 +23,23 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // Grant getDisplayMedia requests a screen source with system loopback
+  // audio, so the renderer can record everything the computer plays
+  // without showing a picker dialog.
+  session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+    desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
+      callback({ video: sources[0], audio: 'loopback' });
+    });
+  });
+
+  ipcMain.handle('save-recording', async (event, arrayBuffer) => {
+    fs.mkdirSync(RECORDINGS_DIR, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filePath = path.join(RECORDINGS_DIR, `recording-${stamp}.webm`);
+    fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+    return filePath;
+  });
+
   createWindow();
 
   app.on('activate', () => {
