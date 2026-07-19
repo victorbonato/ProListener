@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; media-src 'self' blob:" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; media-src 'self' blob:; connect-src 'self' wss://api.whisperai.com" />
   <title>Pro Listener</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -47,6 +47,14 @@
       <div class="field field-duration">
         <label for="duration">Max duration (s)</label>
         <input id="duration" type="number" min="1" max="3600" value="60" />
+      </div>
+
+      <div class="field field-mode">
+        <span class="field-label">Real-time</span>
+        <label class="switch">
+          <input type="checkbox" id="realtime-toggle" />
+          <span class="slider"></span>
+        </label>
       </div>
 
       <div class="buttons">
