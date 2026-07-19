@@ -8,6 +8,7 @@ An elegant dark-themed desktop app that records your computer's audio output and
 - **Timed recordings** — set a max duration in seconds; recording stops automatically, or press **Stop** anytime.
 - **One-click transcription** — uploads the recording to WhisperAI, polls until done, and displays the transcript below the controls.
 - **Language selection** — pin the transcription language or let WhisperAI auto-detect it.
+- **Real-time mode** — flip the toggle and Record streams system audio live over WhisperAI's realtime WebSocket; partial turns appear dimmed and finalize as you listen.
 
 ## Setup
 
@@ -37,13 +38,17 @@ npm start
 3. Press **Stop** (or wait for the auto-stop) — the recording is saved to `recordings/` as WebM/Opus.
 4. Press **Transcribe** — the transcript appears below once WhisperAI finishes processing.
 
+### Real-time mode
+
+Flip the **Real-time** toggle, then press **Record**. Audio is resampled to 16 kHz mono PCM and streamed over the realtime WebSocket (`whisperai-realtime-pro`); the transcript updates live, with in-progress turns shown dimmed. Press **Stop** (or wait for the max duration) to end the session — realtime usage is billed by WebSocket session duration, so the status row shows the billed seconds when available. The renderer authenticates with a single-use browser token minted by the main process; the API key itself is never exposed. Note that the language selector does not apply in real-time mode.
+
 ## Project structure
 
 | File | Role |
 | --- | --- |
 | `main.js` | Electron main process: window, loopback audio grant, recording persistence, WhisperAI API calls |
 | `preload.js` | Narrow IPC bridge exposed to the renderer |
-| `renderer/` | Dark UI: controls, recording logic (MediaRecorder), transcript display |
+| `renderer/` | Dark UI: controls, recording logic (MediaRecorder), realtime streaming (AudioWorklet + WebSocket), transcript display |
 
 ## Notes
 
