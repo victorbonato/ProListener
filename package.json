@@ -1,0 +1,13 @@
+{
+  "name": "pro-listener",
+  "version": "1.0.0",
+  "description": "Record your computer's audio output and transcribe it with WhisperAI.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^37.2.0"
+  }
+}
