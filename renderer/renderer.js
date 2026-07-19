@@ -125,5 +125,42 @@ async function onRecordingStopped() {
   }
 }
 
+async function transcribe() {
+  if (!savedFilePath) return;
+
+  els.transcribe.disabled = true;
+  els.record.disabled = true;
+  setStatus('Uploading recording & transcribing…', 'working');
+
+  const result = await window.proListener.transcribe({
+    filePath: savedFilePath,
+    languageCode: els.language.value
+  });
+
+  els.transcribe.disabled = false;
+  els.record.disabled = false;
+
+  if (!result.ok) {
+    setStatus(`Transcription failed: ${result.error}`, 'error');
+    return;
+  }
+
+  const text = (result.text || '').trim();
+  els.transcript.textContent = text || '(No speech detected in the recording.)';
+  els.transcript.classList.toggle('empty', !text);
+  els.copy.hidden = !text;
+  setStatus('Transcription complete.', 'ok');
+}
+
+async function copyTranscript() {
+  await navigator.clipboard.writeText(els.transcript.textContent);
+  els.copy.textContent = 'Copied!';
+  setTimeout(() => {
+    els.copy.textContent = 'Copy';
+  }, 1500);
+}
+
 els.record.addEventListener('click', startRecording);
 els.stop.addEventListener('click', stopRecording);
+els.transcribe.addEventListener('click', transcribe);
+els.copy.addEventListener('click', copyTranscript);
