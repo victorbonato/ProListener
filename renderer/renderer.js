@@ -54,7 +54,11 @@ function stopTimer() {
   autoStopTimeout = null;
 }
 
+const VIRTUAL_LOOPBACK_DEVICE = /blackhole|loopback|soundflower/i;
+
 async function captureSystemAudio() {
+  if (window.proListener.platform === 'darwin') return captureMacAudio();
+
   try {
     // The main process answers this request with a screen source whose
     // audio is the system loopback — i.e. everything the computer plays.
@@ -75,6 +79,42 @@ async function captureSystemAudio() {
     return null;
   }
   return new MediaStream(audioTracks);
+}
+
+// macOS has no system loopback capture, so record from a virtual
+// loopback input device (BlackHole & friends) when one is installed,
+// falling back to the default input otherwise.
+async function captureMacAudio() {
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (err) {
+    setStatus(`Could not access audio input: ${err.message}`, 'error');
+    return null;
+  }
+
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const virtual = devices.find(
+    (d) => d.kind === 'audioinput' && VIRTUAL_LOOPBACK_DEVICE.test(d.label)
+  );
+  const currentLabel = stream.getAudioTracks()[0]?.label ?? '';
+
+  if (virtual && !VIRTUAL_LOOPBACK_DEVICE.test(currentLabel)) {
+    stream.getTracks().forEach((t) => t.stop());
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { deviceId: { exact: virtual.deviceId } }
+      });
+    } catch (err) {
+      setStatus(`Could not open ${virtual.label}: ${err.message}`, 'error');
+      return null;
+    }
+  } else if (!virtual) {
+    setStatus('No loopback device found — recording the default input instead. Install BlackHole to capture system audio.', 'idle');
+  }
+
+  displayStream = stream;
+  return new MediaStream(stream.getAudioTracks());
 }
 
 function clampedMaxSeconds() {

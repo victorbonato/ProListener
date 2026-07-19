@@ -33,10 +33,10 @@ An elegant dark-themed desktop app that records your computer's audio output and
 npm start
 ```
 
-Prefer launching without a terminal? Create a desktop shortcut once (Windows):
+Prefer launching without a terminal? Create a desktop launcher once (Windows `.lnk`, macOS `.app`, Linux `.desktop`):
 
-```powershell
-powershell -ExecutionPolicy Bypass -File create-shortcut.ps1
+```sh
+npm run shortcut
 ```
 
 1. Pick a **language** (or leave on auto-detect) and a **max duration** in seconds.
@@ -60,4 +60,5 @@ Flip the **Real-time** toggle, then press **Record**. Audio is resampled to 16 k
 
 - Recordings are saved locally in `recordings/` (gitignored).
 - Transcription requires an internet connection; audio is uploaded to WhisperAI's API and stored under your API account (delete via `DELETE /v1/transcript/{id}` if needed).
-- System audio loopback capture is supported on Windows.
+- **Windows**: system audio is captured natively via WASAPI loopback — no setup needed.
+- **macOS**: macOS offers no loopback capture, so Pro Listener records from a virtual loopback input device instead. Install [BlackHole](https://existential.audio/blackhole/) (free), then in **Audio MIDI Setup** create a Multi-Output Device (your speakers + BlackHole) and set it as the sound output — the app auto-detects BlackHole and records from it. Without one, it falls back to the default input (microphone). Grant microphone permission when prompted.

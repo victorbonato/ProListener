@@ -1,4 +1,4 @@
-const { app, BrowserWindow, session, desktopCapturer, ipcMain } = require('electron');
+const { app, BrowserWindow, session, desktopCapturer, ipcMain, systemPreferences } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -93,14 +93,24 @@ function createWindow() {
 app.whenReady().then(() => {
   loadEnv();
 
-  // Grant getDisplayMedia requests a screen source with system loopback
-  // audio, so the renderer can record everything the computer plays
-  // without showing a picker dialog.
+  // Windows: grant getDisplayMedia requests a screen source with system
+  // loopback audio, so the renderer can record everything the computer
+  // plays without showing a picker dialog. macOS has no loopback source;
+  // there the renderer captures a virtual loopback input device instead
+  // (see captureSystemAudio in the renderer), which needs mic permission.
   session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
     desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
-      callback({ video: sources[0], audio: 'loopback' });
+      callback(
+        process.platform === 'win32'
+          ? { video: sources[0], audio: 'loopback' }
+          : { video: sources[0] }
+      );
     });
   });
+
+  if (process.platform === 'darwin') {
+    systemPreferences.askForMediaAccess('microphone');
+  }
 
   ipcMain.handle('save-recording', async (event, arrayBuffer) => {
     fs.mkdirSync(RECORDINGS_DIR, { recursive: true });
