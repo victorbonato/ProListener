@@ -110,6 +110,26 @@ app.whenReady().then(() => {
     return filePath;
   });
 
+  // Mint a single-use browser token so the renderer can open the
+  // realtime WebSocket itself without ever seeing the API key.
+  ipcMain.handle('realtime-token', async () => {
+    const apiKey = process.env.WHISPERAI_API_KEY;
+    if (!apiKey) {
+      return { ok: false, error: 'WHISPERAI_API_KEY is not set. Copy .env.example to .env and add your key.' };
+    }
+    try {
+      const res = await fetch(`${WHISPER_BASE}/realtime/token`, {
+        method: 'POST',
+        headers: { Authorization: apiKey }
+      });
+      if (!res.ok) return { ok: false, error: `Token request failed (${await apiError(res)})` };
+      const { token } = await res.json();
+      return { ok: true, token };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  });
+
   ipcMain.handle('transcribe', async (event, { filePath, languageCode }) => {
     try {
       // Only allow transcribing files this app saved.
